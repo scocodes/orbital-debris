@@ -30,7 +30,7 @@ The project is an extension of ongoing research into laser-induced active debris
 
 ## Repository Structure
 
-```orbital-debris-ml
+```orbital-debris
 src/
     __init__.py
     atmosphere.py
