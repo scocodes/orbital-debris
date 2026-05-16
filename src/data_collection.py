@@ -3,7 +3,7 @@ from atmosphere import Atmosphere
 from orbit import Orbit
 import pandas as pd
 
-class Machine:
+class Data:
     def __init__(self, trial_number):
         self.trial_number = trial_number
         self.atmosphere = Atmosphere()
@@ -72,4 +72,4 @@ class Machine:
                              round(impulse_magnitude_uncertainty, 3), round(B_trial, 3), round(impulse_application_uncertainy, 3), valid_label])
 
         df = pd.DataFrame(output_X, columns=parameters_physical)
-        df.to_csv("dataset_test.csv", index=False)
+        df.to_csv("data/dataset_test.csv", index=False)
