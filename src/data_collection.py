@@ -1,12 +1,10 @@
 import numpy as np
-from atmosphere import Atmosphere
-from orbit import Orbit
 import pandas as pd
 
 class Data:
-    def __init__(self, trial_number):
-        self.trial_number = trial_number
-        self.atmosphere = Atmosphere()
+    def __init__(self, atmosphere, orbit):
+        self.atmosphere = atmosphere
+        self.orbit = orbit
 
     def log_uniform(self, low, high):
         return 10**np.random.uniform(np.log10(low), np.log10(high))
@@ -15,14 +13,14 @@ class Data:
         cd = 2.2
         return mass/(cd*area)
     
-    def data_collection(self):
+    def data_collection(self, trial_number):
         output_X = []
         parameters_physical = ["Mass", "Area", "Altitude", 
                                "Impulse Magnitude", "Number of Burns", "Number of Burns Uncertainty",
                                "Impulse Direction Uncertainty", "Impulse Magnitude Uncertainty",
                                "Ballistic Coefficient", "Impulse Application Uncertainty", "Re-Entry Achieved?"]
 
-        for n in range(self.trial_number):
+        for n in range(trial_number):
             
 
             mass_trial = self.log_uniform(0.01, 1000)
@@ -41,8 +39,8 @@ class Data:
             
             deltavtrial = impulse_magnitude_trial * impulse_magnitude_uncertainty
             deltavtrial = max(deltavtrial, 0)
-            r0_mag = Atmosphere.r_earth + altitude_trial * 1e3
-            T = 2*np.pi*np.sqrt((r0_mag**3)/Atmosphere.mu_earth)
+            r0_mag = self.atmosphere.r_earth + altitude_trial * 1e3
+            T = 2*np.pi*np.sqrt((r0_mag**3)/self.atmosphere.mu_earth)
             impulse_application_uncertainy = np.random.normal(0, (0.3*T))
 
             theta = np.deg2rad(impulse_direction_uncertainty)
@@ -58,9 +56,9 @@ class Data:
                 tburn = i*T + u_time
                 manoeuvres.append((tburn, dv_vec))
 
-            orbit = Orbit(altitude_trial, B_trial, manoeuvres, stop_alt_km=350, dt=10, atmosphere=self.atmosphere)
-            _, ys = orbit.orbitprop()
-            valid = orbit.validity(ys)
+            orbit_trial = self.orbit(altitude_trial, B_trial, manoeuvres, stop_alt_km=350, dt=10, atmosphere=self.atmosphere)
+            _, ys = orbit_trial.orbitprop()
+            valid = orbit_trial.validity(ys)
 
             if valid == False:
                 valid_label = "No"

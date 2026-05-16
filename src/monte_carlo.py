@@ -1,15 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt 
-from atmosphere import Atmosphere
-from orbit import Orbit
 
 class MonteCarlo:
-    def __init__(self, N_trials, deltav, n_burns, height, B):
+    def __init__(self, N_trials, deltav, n_burns, height, B, orbit=None, atmosphere=None):
         self.N_trials = N_trials
         self.deltav = deltav
         self.n_burns = n_burns
         self.height = height
         self.B = B
+        self.orbit = orbit
+        self.atm = atmosphere
     
     "MonteCarlo Uncertainty Engine"
     def montecarlo(self):
@@ -19,22 +19,22 @@ class MonteCarlo:
             uncert = 1 + np.random.normal(0, 0.2)
             deltavtrial = self.deltav * uncert
 
-            r0_mag = Atmosphere.r_earth + self.height * 1e3
+            r0_mag = self.atmosphere.r_earth + self.height * 1e3
             theta = np.deg2rad(np.random.normal(0, 18))
             u_rot = np.array([-np.sin(theta), np.cos(theta), 0])
             dv_vec = -deltavtrial * u_rot
         
             manoeuvres = []
 
-            T = 2*np.pi*np.sqrt((r0_mag**3)/Atmosphere.mu_earth)
+            T = 2*np.pi*np.sqrt((r0_mag**3)/self.tmosphere.mu_earth)
             
             for i in range(self.n_burns):
                 u_time = np.random.normal(0, 1*(0.2*T))
                 tburn = i*T + u_time
                 manoeuvres.append((tburn, dv_vec))
 
-            _, ys = Orbit.orbitprop(self.height, self.B, manoeuvres, stop_alt_km=350)
-            valid = Orbit.validity(ys)
+            _, ys = self.orbit.orbitprop(self.height, self.B, manoeuvres, stop_alt_km=350)
+            valid = self.orbit.validity(ys)
 
             results.append((trial, dv_vec, valid))
 
@@ -42,8 +42,8 @@ class MonteCarlo:
 
     "Single Case Decay Time Function"
     def orbitPropCheck(self):
-        ts, ys = Orbit.orbitprop(manoeuvres=None, stop_alt_km=100)
-        altitude_00 = Orbit.althist(ys)
+        ts, ys = self.orbit.orbitprop(manoeuvres=None, stop_alt_km=100)
+        altitude_00 = self.orbit.althist(ys)
         plt.plot(ts/(24*3600), altitude_00)
         plt.xlabel("Time (Days)")
         plt.ylabel("Altitude (km)")

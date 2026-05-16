@@ -1,5 +1,4 @@
 import numpy as np
-from src.atmosphere import Atmosphere
 
 class Orbit:
     def __init__(self, height=850, B=1.227, manoeuvres=None, stop_alt_km=350, dt=10, atmosphere=None):
@@ -16,9 +15,9 @@ class Orbit:
         v = y[3:6]
 
         rmag = np.linalg.norm(r)
-        alt_km = (rmag-Atmosphere.r_earth) / 1e3
+        alt_km = (rmag-self.atmosphere.r_earth) / 1e3
 
-        agrav = -Atmosphere.mu_earth*(r/rmag**3)
+        agrav = -self.atmosphere.mu_earth*(r/rmag**3)
         rho = self.atmosphere.density(alt_km)
         vmag = np.linalg.norm(v)
         if vmag > 0:
@@ -46,16 +45,16 @@ class Orbit:
     def orbitprop(self):
         
         height_km = self.height*1e3   
-        r0_mag = Atmosphere.r_earth + height_km
+        r0_mag = self.atmosphere.r_earth + height_km
 
         # Initial time parameters
-        T = 2*np.pi*np.sqrt((r0_mag**3)/Atmosphere.mu_earth)
+        T = 2*np.pi*np.sqrt((r0_mag**3)/self.atmosphere.mu_earth)
         t0 = 0
         tf = 100*T 
 
         # Initial Positional parameters
         r0 = np.array([r0_mag, 0.0, 0.0]) 
-        vcirc = np.sqrt(Atmosphere.mu_earth/r0_mag)
+        vcirc = np.sqrt(self.atmosphere.mu_earth/r0_mag)
         v0 = np.array([0.0, vcirc, 0.0])
         y0 = np.hstack((r0, v0))
 
@@ -94,7 +93,7 @@ class Orbit:
 
             if self.stop_alt_km is not None:
                 rmag = np.linalg.norm(y[0:3])
-                alt_km = (rmag - Atmosphere.r_earth) / 1e3
+                alt_km = (rmag - self.atmosphere.r_earth) / 1e3
                 if alt_km <= self.stop_alt_km:
                     self.ts = np.array(ts[:i+1])
                     self.ys = np.array(ys[:i+1])
@@ -104,7 +103,7 @@ class Orbit:
     def althist(self, ys):
         rvec = ys[:, 0:3]
         radmag = np.linalg.norm(rvec, axis=1)
-        self.altkm = (radmag - Atmosphere.r_earth) / 1e3
+        self.altkm = (radmag - self.atmosphere.r_earth) / 1e3
         return self.altkm
 
     "Re-Entry Height Condition Check"
